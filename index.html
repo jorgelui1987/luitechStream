@@ -81,7 +81,7 @@
     }
   </style>
 </head>
-<body class="bg-darkbg text-gray-100 font-sans antialiased selection:bg-brand-600 selection:text-white h-screen overflow-hidden flex flex-col justify-between">
+<body class="bg-darkbg text-gray-100 font-sans antialiased selection:bg-brand-600 selection:text-white h-[100dvh] overflow-hidden flex flex-col justify-between">
 
   <!-- Toast Notification -->
   <div id="toast" class="fixed top-4 left-1/2 -translate-x-1/2 z-[100] bg-zinc-900 border border-brand-500/40 text-white text-xs font-medium px-4 py-2.5 rounded-xl shadow-2xl shadow-black/50 opacity-0 pointer-events-none flex items-center space-x-2">
@@ -90,27 +90,27 @@
   </div>
 
   <!-- Header Bar -->
-  <header class="bg-darkcard/90 backdrop-blur-md border-b border-zinc-800 px-4 py-3 flex items-center justify-between z-40 shrink-0">
+  <header class="bg-darkcard/90 backdrop-blur-md border-b border-zinc-800 px-3 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between z-40 shrink-0">
     <div class="flex items-center space-x-2">
-      <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-brand-600 to-amber-500 flex items-center justify-center shadow-lg shadow-brand-600/30">
-        <i data-lucide="play" class="w-4 h-4 text-white fill-current ml-0.5"></i>
+      <div id="logo-tap" onclick="handleLogoTap()" class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-gradient-to-tr from-brand-600 to-amber-500 flex items-center justify-center shadow-lg shadow-brand-600/30 cursor-pointer">
+        <i data-lucide="play" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white fill-current ml-0.5"></i>
       </div>
-      <span class="font-bold text-lg tracking-tight bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent">LuiTechStream</span>
+      <span class="font-bold text-base sm:text-lg tracking-tight bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent">LuiTechStream</span>
     </div>
 
     <!-- Coins & Actions -->
-    <div class="flex items-center space-x-3">
-      <button onclick="openCoinsModal()" class="flex items-center space-x-1.5 bg-zinc-800/80 hover:bg-zinc-700 text-amber-400 border border-amber-500/30 px-3 py-1 rounded-full text-xs font-semibold transition">
+    <div class="flex items-center space-x-2 sm:space-x-3">
+      <button onclick="openCoinsModal()" class="flex items-center space-x-1.5 bg-zinc-800/80 hover:bg-zinc-700 text-amber-400 border border-amber-500/30 px-2.5 sm:px-3 py-1 rounded-full text-xs font-semibold transition">
         <i data-lucide="coins" class="w-3.5 h-3.5 fill-amber-400"></i>
         <span id="user-coins-display">150</span>
         <span class="text-zinc-400 font-normal">+</span>
       </button>
 
-      <button onclick="toggleTab('admin')" class="p-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition relative" title="Panel de Creador">
+      <button id="admin-btn" onclick="promptAdminAccess()" class="hidden p-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition relative" title="Panel de Creador">
         <i data-lucide="folder-plus" class="w-4 h-4"></i>
       </button>
 
-      <button onclick="toggleTab('code')" class="p-2 rounded-xl bg-brand-600/20 text-brand-500 border border-brand-500/30 hover:bg-brand-600/30 transition" title="Código Flutter / VS Code">
+      <button onclick="toggleTab('code')" class="hidden sm:flex p-2 rounded-xl bg-brand-600/20 text-brand-500 border border-brand-500/30 hover:bg-brand-600/30 transition" title="Código Flutter / VS Code">
         <i data-lucide="code-2" class="w-4 h-4"></i>
       </button>
     </div>
@@ -121,8 +121,8 @@
 
     <!-- VIEW 1: REEL FEED (TIKTOK / DRAMABOX VERTICAL PLAYER) -->
     <section id="view-feed" class="w-full h-full relative flex justify-center items-center">
-      <!-- Mobile Container Frame (Centered on Desktop) -->
-      <div class="w-full max-w-sm h-full bg-black relative flex flex-col justify-between overflow-hidden shadow-2xl">
+      <!-- Mobile Container Frame (Full width on mobile, centered on desktop) -->
+      <div class="w-full sm:max-w-sm h-full bg-black relative flex flex-col justify-between overflow-hidden shadow-2xl">
         
         <!-- Feed Scroll Area -->
         <div id="feed-scroll-container" class="w-full h-full overflow-y-scroll snap-y-mandatory scroll-smooth relative">
@@ -705,8 +705,9 @@ app.listen(3000, () => console.log('Servidor corriendo en puerto 3000'));
   <script>
     // --- API CONFIGURATION (MySQL Backend) ---
     // Usa URL relativa para que funcione en local y producción
-    const API_URL = 'http://localhost/luitechstream/api.php';
+    const API_URL = 'api.php';
     const USER_ID = 1; // Usuario demo
+    const ADMIN_PASSWORD = 'admin123'; // Contraseña para acceder al panel de creador
 
     // --- DATABASE & STATE MANAGEMENT ---
     const INITIAL_SERIES_DATA = [
@@ -898,6 +899,45 @@ app.listen(3000, () => console.log('Servidor corriendo en puerto 3000'));
         toast.classList.add('opacity-0');
         toast.classList.remove('opacity-100');
       }, 2500);
+    }
+
+    // --- ADMIN ACCESS CONTROL ---
+    let logoTapCount = 0;
+    let logoTapTimer = null;
+
+    function handleLogoTap() {
+      logoTapCount++;
+      if (logoTapTimer) clearTimeout(logoTapTimer);
+      logoTapTimer = setTimeout(() => {
+        logoTapCount = 0;
+      }, 2000);
+
+      if (logoTapCount >= 5) {
+        logoTapCount = 0;
+        promptAdminAccess();
+      }
+    }
+
+    function promptAdminAccess() {
+      const password = prompt("Ingresa la contraseña de administrador para acceder al Panel del Creador:");
+      if (password === ADMIN_PASSWORD) {
+        localStorage.setItem('drama_admin', 'true');
+        toggleTab('admin');
+        showToast("¡Bienvenido al Panel del Creador!");
+      } else if (password !== null) {
+        showToast("Contraseña incorrecta", true);
+      }
+    }
+
+    function checkAdminAccess() {
+      const isAdmin = localStorage.getItem('drama_admin') === 'true';
+      const adminBtn = document.getElementById('admin-btn');
+      if (isAdmin) {
+        adminBtn.classList.remove('hidden');
+        adminBtn.onclick = () => toggleTab('admin');
+      } else {
+        adminBtn.classList.add('hidden');
+      }
     }
 
     // --- NAVIGATION TAB SYSTEM ---
@@ -1498,6 +1538,7 @@ app.listen(3000, () => console.log('Servidor corriendo en puerto 3000'));
 
     // Initialize App - Load from MySQL database
     window.onload = () => {
+      checkAdminAccess();
       loadFromDatabase();
     };
   </script>
