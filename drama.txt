@@ -1,0 +1,1494 @@
+﻿<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>LuiTechStream - App de Series Cortas</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#fff1f2',
+              500: '#f43f5e',
+              600: '#e11d48',
+              700: '#be123c',
+              900: '#881337',
+            },
+            darkbg: '#0f0f12',
+            darkcard: '#18181c',
+          },
+          aspectRatio: {
+            'vertical': '9/16',
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    /* Custom Scrollbar for Smooth Mobile Feel */
+    ::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0f0f12;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #27272a;
+      border-radius: 4px;
+    }
+    
+    /* Vertical Feed Snap Scrolling */
+    .snap-y-mandatory {
+      scroll-snap-type: y mandatory;
+    }
+    .snap-center-item {
+      scroll-snap-align: start;
+      scroll-snap-stop: always;
+    }
+
+    /* Floating Heart Animation */
+    @keyframes heartFloat {
+      0% { transform: scale(0.5) translateY(0); opacity: 1; }
+      100% { transform: scale(1.4) translateY(-80px); opacity: 0; }
+    }
+    .animate-heart {
+      animation: heartFloat 0.8s ease-out forwards;
+    }
+
+    /* Hide scrollbar for category filter */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    /* Toast Notification */
+    #toast {
+      transition: all 0.3s ease;
+    }
+  </style>
+</head>
+<body class="bg-darkbg text-gray-100 font-sans antialiased selection:bg-brand-600 selection:text-white h-screen overflow-hidden flex flex-col justify-between">
+
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed top-4 left-1/2 -translate-x-1/2 z-[100] bg-zinc-900 border border-brand-500/40 text-white text-xs font-medium px-4 py-2.5 rounded-xl shadow-2xl shadow-black/50 opacity-0 pointer-events-none flex items-center space-x-2">
+    <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400"></i>
+    <span id="toast-message">Mensaje</span>
+  </div>
+
+  <!-- Header Bar -->
+  <header class="bg-darkcard/90 backdrop-blur-md border-b border-zinc-800 px-4 py-3 flex items-center justify-between z-40 shrink-0">
+    <div class="flex items-center space-x-2">
+      <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-brand-600 to-amber-500 flex items-center justify-center shadow-lg shadow-brand-600/30">
+        <i data-lucide="play" class="w-4 h-4 text-white fill-current ml-0.5"></i>
+      </div>
+      <span class="font-bold text-lg tracking-tight bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent">LuiTechStream</span>
+    </div>
+
+    <!-- Coins & Actions -->
+    <div class="flex items-center space-x-3">
+      <button onclick="openCoinsModal()" class="flex items-center space-x-1.5 bg-zinc-800/80 hover:bg-zinc-700 text-amber-400 border border-amber-500/30 px-3 py-1 rounded-full text-xs font-semibold transition">
+        <i data-lucide="coins" class="w-3.5 h-3.5 fill-amber-400"></i>
+        <span id="user-coins-display">150</span>
+        <span class="text-zinc-400 font-normal">+</span>
+      </button>
+
+      <button onclick="toggleTab('admin')" class="p-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition relative" title="Panel de Creador">
+        <i data-lucide="folder-plus" class="w-4 h-4"></i>
+      </button>
+
+      <button onclick="toggleTab('code')" class="p-2 rounded-xl bg-brand-600/20 text-brand-500 border border-brand-500/30 hover:bg-brand-600/30 transition" title="Código Flutter / VS Code">
+        <i data-lucide="code-2" class="w-4 h-4"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Application Container -->
+  <main class="flex-1 relative overflow-hidden bg-black">
+
+    <!-- VIEW 1: REEL FEED (TIKTOK / DRAMABOX VERTICAL PLAYER) -->
+    <section id="view-feed" class="w-full h-full relative flex justify-center items-center">
+      <!-- Mobile Container Frame (Centered on Desktop) -->
+      <div class="w-full max-w-sm h-full bg-black relative flex flex-col justify-between overflow-hidden shadow-2xl">
+        
+        <!-- Feed Scroll Area -->
+        <div id="feed-scroll-container" class="w-full h-full overflow-y-scroll snap-y-mandatory scroll-smooth relative">
+          <!-- Dynamic Reel Items will be injected here -->
+        </div>
+
+        <!-- Floating Quick Controls / Indicator overlay when scrolling -->
+        <div class="absolute top-4 left-4 z-20 pointer-events-none">
+          <span class="bg-black/40 backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] font-medium text-white border border-white/10">
+            <i data-lucide="sparkles" class="w-3 h-3 text-amber-400 inline mr-1"></i> Modo Vertical 9:16
+          </span>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- VIEW 2: CATALOG EXPLORER -->
+    <section id="view-catalog" class="hidden w-full h-full overflow-y-auto p-4 max-w-4xl mx-auto pb-24">
+      <div class="mb-6">
+        <h1 class="text-2xl font-bold text-white mb-1">Catálogo de Series Cortas</h1>
+        <p class="text-sm text-zinc-400">Descubre los microdramas más populares de 1 a 3 minutos.</p>
+      </div>
+
+      <!-- Search Bar -->
+      <div class="relative mb-4">
+        <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500"></i>
+        <input 
+          type="text" 
+          id="search-input"
+          placeholder="Buscar series por título..." 
+          oninput="handleSearch()"
+          class="w-full bg-zinc-900 border border-zinc-800 rounded-xl pl-9 pr-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 transition"
+        >
+      </div>
+
+      <!-- Categories Filter -->
+      <div class="flex space-x-2 overflow-x-auto pb-3 mb-6 no-scrollbar">
+        <button onclick="filterCatalog('all')" class="cat-btn bg-brand-600 text-white px-4 py-1.5 rounded-full text-xs font-medium shrink-0">Todos</button>
+        <button onclick="filterCatalog('CEO')" class="cat-btn bg-zinc-800 hover:bg-zinc-700 text-zinc-300 px-4 py-1.5 rounded-full text-xs font-medium shrink-0">CEO & Millonarios</button>
+        <button onclick="filterCatalog('Venganza')" class="cat-btn bg-zinc-800 hover:bg-zinc-700 text-zinc-300 px-4 py-1.5 rounded-full text-xs font-medium shrink-0">Venganza</button>
+        <button onclick="filterCatalog('Romance')" class="cat-btn bg-zinc-800 hover:bg-zinc-700 text-zinc-300 px-4 py-1.5 rounded-full text-xs font-medium shrink-0">Romance</button>
+        <button onclick="filterCatalog('Fantasía')" class="cat-btn bg-zinc-800 hover:bg-zinc-700 text-zinc-300 px-4 py-1.5 rounded-full text-xs font-medium shrink-0">Fantasía</button>
+      </div>
+
+      <!-- Series Grid -->
+      <div id="catalog-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+        <!-- Injected dynamically -->
+      </div>
+
+      <!-- Empty State -->
+      <div id="catalog-empty" class="hidden flex flex-col items-center justify-center py-16 text-center">
+        <i data-lucide="search-x" class="w-12 h-12 text-zinc-700 mb-3"></i>
+        <h3 class="text-sm font-semibold text-zinc-300">No se encontraron series</h3>
+        <p class="text-xs text-zinc-500 mt-1">Intenta con otra búsqueda o categoría.</p>
+      </div>
+    </section>
+
+    <!-- VIEW 3: ADMIN / CREATOR STUDIO -->
+    <section id="view-admin" class="hidden w-full h-full overflow-y-auto p-4 max-w-3xl mx-auto pb-24">
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <h1 class="text-2xl font-bold text-white">Panel del Creador</h1>
+          <p class="text-sm text-zinc-400">Gestiona tus series, sube enlaces MP4/HLS y configura costos.</p>
+        </div>
+        <button onclick="resetDefaultData()" class="text-xs bg-zinc-800 hover:bg-zinc-700 text-zinc-400 px-3 py-1.5 rounded-lg transition">
+          Restablecer datos
+        </button>
+      </div>
+
+      <!-- Add New Series Form -->
+      <div class="bg-darkcard border border-zinc-800 rounded-2xl p-5 mb-6">
+        <h2 class="text-lg font-semibold text-white mb-4 flex items-center">
+          <i data-lucide="plus-circle" class="w-5 h-5 text-brand-500 mr-2"></i> Añadir Nueva Serie Corta
+        </h2>
+        <form id="add-series-form" onsubmit="handleAddSeries(event)" class="space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-medium text-zinc-400 mb-1">Título de la Serie</label>
+              <input type="text" id="form-title" required placeholder="Ej. El Secreto del CEO" class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-zinc-400 mb-1">Categoría / Género</label>
+              <select id="form-category" class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+                <option value="CEO">CEO & Millonarios</option>
+                <option value="Venganza">Venganza</option>
+                <option value="Romance">Romance</option>
+                <option value="Fantasía">Fantasía</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium text-zinc-400 mb-1">URL de Portada (Imagen)</label>
+            <input type="url" id="form-cover" required placeholder="https://images.unsplash.com/photo-..." class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium text-zinc-400 mb-1">Sinopsis</label>
+            <textarea id="form-desc" rows="2" placeholder="Breve historia del microdrama..." class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500"></textarea>
+          </div>
+
+          <!-- Dynamic Episodes List -->
+          <div class="p-3 bg-zinc-900/60 rounded-xl border border-zinc-800">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-semibold text-brand-400">Episodios de la Serie</span>
+              <button type="button" onclick="addEpisodeField()" class="text-[10px] bg-brand-600 hover:bg-brand-700 text-white font-medium px-2.5 py-1 rounded-lg transition flex items-center space-x-1">
+                <i data-lucide="plus" class="w-3 h-3"></i>
+                <span>Añadir Episodio</span>
+              </button>
+            </div>
+            <p class="text-[10px] text-zinc-500 mb-3">El Episodio 1 siempre es gratis. Los siguientes pueden ser VIP con costo en monedas.</p>
+            <div id="episodes-container" class="space-y-2">
+              <!-- Episode 1 (always free) -->
+              <div class="episode-field bg-zinc-950/60 border border-zinc-800 rounded-lg p-2.5">
+                <div class="flex items-center justify-between mb-1.5">
+                  <span class="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md">Episodio 1 - GRATIS</span>
+                </div>
+                <input type="url" class="ep-url w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-brand-500" placeholder="URL del video MP4 (Vertical 9:16)" required>
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-medium py-2.5 rounded-xl text-sm transition shadow-lg shadow-brand-600/20">
+            Publicar Serie
+          </button>
+        </form>
+      </div>
+
+      <!-- List of Existing Series -->
+      <div class="bg-darkcard border border-zinc-800 rounded-2xl p-5">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-semibold text-white">Series Registradas en Servidor</h2>
+          <span id="admin-series-count" class="text-xs bg-zinc-800 text-zinc-400 px-2 py-1 rounded-lg"></span>
+        </div>
+        <div id="admin-series-list" class="space-y-3">
+          <!-- Injected dynamically -->
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 4: CODE & ARCHITECTURE EXPORTER (FOR VS CODE) -->
+    <section id="view-code" class="hidden w-full h-full overflow-y-auto p-4 max-w-4xl mx-auto pb-24">
+      <div class="mb-6">
+        <h1 class="text-2xl font-bold text-white mb-1">Código Fuente para VS Code</h1>
+        <p class="text-sm text-zinc-400">Copia estos scripts para armar tu proyecto nativo en Flutter y backend en Node.js/Supabase.</p>
+      </div>
+
+      <!-- How to upload videos / architecture guide -->
+      <div class="bg-amber-500/5 border border-amber-500/20 rounded-2xl p-4 mb-6">
+        <h3 class="text-sm font-bold text-amber-400 flex items-center mb-2">
+          <i data-lucide="lightbulb" class="w-4 h-4 mr-2"></i> Guía Rápida: ¿Dónde subir tus videos?
+        </h3>
+        <ul class="text-xs text-zinc-300 space-y-1.5 list-disc list-inside">
+          <li><span class="text-white font-semibold">Opción Gratuita:</span> Sube videos a <span class="text-amber-300">Streamable, Vimeo, o CDN gratuitos</span> y copia la URL directa .mp4</li>
+          <li><span class="text-white font-semibold">Con Laragon:</span> Coloca tus videos .mp4 en <code class="bg-zinc-900 px-1.5 py-0.5 rounded text-emerald-400">C:\laragon\www\videos\</code> y usa la URL <code class="bg-zinc-900 px-1.5 py-0.5 rounded text-emerald-400">http://localhost/videos/tu-video.mp4</code></li>
+          <li><span class="text-white font-semibold">En Producción:</span> Usa <span class="text-amber-300">AWS S3, Cloudflare R2 o Firebase Storage</span> y pega la URL pública</li>
+        </ul>
+      </div>
+
+      <!-- Database Setup Guide -->
+      <div class="bg-emerald-500/5 border border-emerald-500/20 rounded-2xl p-4 mb-6">
+        <h3 class="text-sm font-bold text-emerald-400 flex items-center mb-2">
+          <i data-lucide="database" class="w-4 h-4 mr-2"></i> ¿Necesita Base de Datos?
+        </h3>
+        <div class="text-xs text-zinc-300 space-y-2">
+          <p><span class="text-emerald-300 font-semibold">Esta versión (demo):</span> NO necesita base de datos. Usa <code class="bg-zinc-900 px-1.5 py-0.5 rounded text-emerald-400">localStorage</code> del navegador. Las series que subas se guardan localmente en tu PC.</p>
+          <p><span class="text-amber-300 font-semibold">Versión de producción:</span> Recomendada con MySQL (Laragon) o Supabase/Firebase. Te dejo el script SQL listo abajo.</p>
+        </div>
+      </div>
+
+      <!-- MySQL Script -->
+      <div class="bg-darkcard border border-zinc-800 rounded-2xl p-4 mb-6">
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-sm font-semibold text-violet-400 flex items-center">
+            <i data-lucide="database" class="w-4 h-4 mr-2"></i> MySQL Schema (para producción con Laragon)
+          </span>
+          <button onclick="copyToClipboard('code-mysql')" class="text-xs bg-zinc-800 hover:bg-zinc-700 text-zinc-300 px-2.5 py-1 rounded-lg">
+            Copiar Código
+          </button>
+        </div>
+        <pre id="code-mysql" class="bg-zinc-950 p-3 rounded-xl text-xs font-mono text-zinc-300 overflow-x-auto max-h-64 border border-zinc-800">
+-- Ejecutar en phpMyAdmin: http://localhost/phpmyadmin
+CREATE DATABASE IF NOT EXISTS dramastream;
+USE dramastream;
+
+-- Tabla de series
+CREATE TABLE IF NOT EXISTS series (
+  id VARCHAR(50) PRIMARY KEY,
+  title VARCHAR(200) NOT NULL,
+  category VARCHAR(50) NOT NULL,
+  cover VARCHAR(500) NOT NULL,
+  description TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Tabla de episodios
+CREATE TABLE IF NOT EXISTS episodes (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  series_id VARCHAR(50) NOT NULL,
+  ep_num INT NOT NULL,
+  title VARCHAR(200) NOT NULL,
+  video_url VARCHAR(500) NOT NULL,
+  is_free BOOLEAN DEFAULT TRUE,
+  cost INT DEFAULT 10,
+  likes INT DEFAULT 0,
+  FOREIGN KEY (series_id) REFERENCES series(id) ON DELETE CASCADE
+);
+
+-- Tabla de usuarios
+CREATE TABLE IF NOT EXISTS users (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  username VARCHAR(50) UNIQUE NOT NULL,
+  coins INT DEFAULT 150,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Tabla de desbloqueos
+CREATE TABLE IF NOT EXISTS unlocks (
+  user_id INT,
+  series_id VARCHAR(50),
+  ep_num INT,
+  unlocked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (user_id, series_id, ep_num),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Insertar datos de ejemplo
+INSERT INTO series (id, title, category, cover, description) VALUES
+('series-1', 'El Secreto del CEO Multimillonario', 'CEO', 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500&q=80', 'Un heredero de negocios se hace pasar por chofer para descubrir quién intenta destruir su empresa.'),
+('series-2', 'La Venganza de la Esposa Rechazada', 'Venganza', 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&q=80', 'Traicionada por su familia, regresa 5 años después como la inversora más poderosa de la ciudad.');
+
+INSERT INTO episodes (series_id, ep_num, title, video_url, is_free, cost) VALUES
+('series-1', 1, 'Capítulo 1: El Chofer Misterioso', 'https://assets.mixkit.co/videos/preview/mixkit-vertical-shot-of-a-waterfall-in-a-forest-42894-large.mp4', TRUE, 0),
+('series-1', 2, 'Capítulo 2: El Encuentro en la Gala', 'https://assets.mixkit.co/videos/preview/mixkit-tree-branches-in-the-breeze-1187-large.mp4', TRUE, 0),
+('series-1', 3, 'Capítulo 3: Revelación Inesperada', 'https://assets.mixkit.co/videos/preview/mixkit-vertical-shot-of-a-waterfall-in-a-forest-42894-large.mp4', FALSE, 10),
+('series-2', 1, 'Capítulo 1: La Traición', 'https://assets.mixkit.co/videos/preview/mixkit-tree-branches-in-the-breeze-1187-large.mp4', TRUE, 0),
+('series-2', 2, 'Capítulo 2: El Regreso de la Reina', 'https://assets.mixkit.co/videos/preview/mixkit-vertical-shot-of-a-waterfall-in-a-forest-42894-large.mp4', TRUE, 0);
+        </pre>
+      </div>
+
+      <!-- Flutter Code Snippet -->
+      <div class="bg-darkcard border border-zinc-800 rounded-2xl p-4">
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-sm font-semibold text-amber-400 flex items-center">
+            <i data-lucide="smartphone" class="w-4 h-4 mr-2"></i> Flutter (lib/main.dart) - Feed Vertical 9:16
+          </span>
+          <button onclick="copyToClipboard('code-flutter')" class="text-xs bg-zinc-800 hover:bg-zinc-700 text-zinc-300 px-2.5 py-1 rounded-lg">
+            Copiar Código
+          </button>
+        </div>
+        <pre id="code-flutter" class="bg-zinc-950 p-3 rounded-xl text-xs font-mono text-zinc-300 overflow-x-auto max-h-64 border border-zinc-800">
+import 'package:flutter/material.dart';
+import 'package:video_player/video_player.dart';
+
+void main() => runApp(const DramaApp());
+
+class DramaApp extends StatelessWidget {
+  const DramaApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData.dark(),
+      home: const VerticalDramaFeed(),
+    );
+  }
+}
+
+class VerticalDramaFeed extends StatefulWidget {
+  const VerticalDramaFeed({super.key});
+
+  @override
+  State<VerticalDramaFeed> createState() => _VerticalDramaFeedState();
+}
+
+class _VerticalDramaFeedState extends State<VerticalDramaFeed> {
+  final List<String> videos = [
+    'https://assets.mixkit.co/videos/preview/mixkit-vertical-shot-of-a-waterfall-in-a-forest-42894-large.mp4',
+    'https://assets.mixkit.co/videos/preview/mixkit-tree-branches-in-the-breeze-1187-large.mp4'
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: PageView.builder(
+        scrollDirection: Axis.vertical,
+        itemCount: videos.length,
+        itemBuilder: (context, index) {
+          return DramaVideoPlayer(url: videos[index], episodeNum: index + 1);
+        },
+      ),
+    );
+  }
+}
+
+class DramaVideoPlayer extends StatefulWidget {
+  final String url;
+  final int episodeNum;
+  const DramaVideoPlayer({super.key, required this.url, required this.episodeNum});
+
+  @override
+  State<DramaVideoPlayer> createState() => _DramaVideoPlayerState();
+}
+
+class _DramaVideoPlayerState extends State<DramaVideoPlayer> {
+  late VideoPlayerController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = VideoPlayerController.networkUrl(Uri.parse(widget.url))
+      ..initialize().then((_) {
+        setState(() {});
+        _controller.play();
+        _controller.setLooping(true);
+      });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        _controller.value.isInitialized
+            ? SizedBox.expand(
+                child: FittedBox(
+                  fit: BoxFit.cover,
+                  child: SizedBox(
+                    width: _controller.value.size.width,
+                    height: _controller.value.size.height,
+                    child: VideoPlayer(_controller),
+                  ),
+                ),
+              )
+            : const Center(child: CircularProgressIndicator(color: Colors.roseAccent)),
+        Positioned(
+          bottom: 40,
+          left: 20,
+          child: Text(
+            "Capítulo ${widget.episodeNum}",
+            style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+        )
+      ],
+    );
+  }
+}
+        </pre>
+      </div>
+
+      <!-- Node.js Backend API Snippet -->
+      <div class="bg-darkcard border border-zinc-800 rounded-2xl p-4">
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-sm font-semibold text-emerald-400 flex items-center">
+            <i data-lucide="server" class="w-4 h-4 mr-2"></i> Node.js Express Backend API (server.js)
+          </span>
+          <button onclick="copyToClipboard('code-node')" class="text-xs bg-zinc-800 hover:bg-zinc-700 text-zinc-300 px-2.5 py-1 rounded-lg">
+            Copiar Código
+          </button>
+        </div>
+        <pre id="code-node" class="bg-zinc-950 p-3 rounded-xl text-xs font-mono text-zinc-300 overflow-x-auto max-h-64 border border-zinc-800">
+const express = require('express');
+const cors = require('cors');
+const mysql = require('mysql2/promise');
+const app = express();
+
+app.use(cors());
+app.use(express.json());
+
+// Configuración MySQL (Laragon)
+const db = mysql.createPool({
+  host: 'localhost',
+  user: 'root',
+  password: '',
+  database: 'dramastream'
+});
+
+// Endpoint: Obtener Catálogo completo
+app.get('/api/series', async (req, res) => {
+  try {
+    const [rows] = await db.query(
+'SELECT s.*, e.ep_num, e.title as ep_title, e.video_url, e.is_free, e.cost ' +
+      'FROM series s LEFT JOIN episodes e ON s.id = e.series_id'
+    );
+    // Agrupar episodios por serie
+    const grouped = {};
+    rows.forEach(r => {
+      if (!grouped[r.id]) {
+        grouped[r.id] = {
+          id: r.id, title: r.title, category: r.category,
+          cover: r.cover, description: r.description, episodes: []
+        };
+      }
+      if (r.ep_num) {
+        grouped[r.id].episodes.push({
+          ep: r.ep_num, title: r.ep_title,
+          url: r.video_url, isFree: !!r.is_free, cost: r.cost
+        });
+      }
+    });
+    res.json(Object.values(grouped));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Endpoint: Desbloquear episodio con monedas
+app.post('/api/unlock-episode', async (req, res) => {
+  const { userId, seriesId, episodeNum } = req.body;
+  try {
+    // 1. Obtener costo del episodio
+    const [epRows] = await db.query(
+      'SELECT cost FROM episodes WHERE series_id = ? AND ep_num = ?',
+      [seriesId, episodeNum]
+    );
+    if (epRows.length === 0) return res.status(404).json({ error: 'Episodio no encontrado' });
+    const cost = epRows[0].cost;
+
+    // 2. Verificar monedas del usuario
+    const [userRows] = await db.query('SELECT coins FROM users WHERE id = ?', [userId]);
+    if (userRows.length === 0) return res.status(404).json({ error: 'Usuario no encontrado' });
+    if (userRows[0].coins < cost) return res.status(402).json({ error: 'Monedas insuficientes' });
+
+    // 3. Descontar monedas y registrar desbloqueo
+    await db.query('UPDATE users SET coins = coins - ? WHERE id = ?', [cost, userId]);
+    await db.query(
+      'INSERT INTO unlocks (user_id, series_id, ep_num) VALUES (?, ?, ?)',
+      [userId, seriesId, episodeNum]
+    );
+
+    res.json({ success: true, message: 'Episodio desbloqueado con éxito', coinsLeft: userRows[0].coins - cost });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.listen(3000, () => console.log('Servidor corriendo en puerto 3000'));
+        </pre>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Bottom Navigation Bar -->
+  <nav class="bg-darkcard/95 backdrop-blur-md border-t border-zinc-800 px-6 py-2 flex items-center justify-around z-40 shrink-0">
+    <button onclick="toggleTab('feed')" id="nav-btn-feed" class="nav-item flex flex-col items-center text-brand-500 font-medium text-xs space-y-1 transition">
+      <i data-lucide="flame" class="w-5 h-5"></i>
+      <span>Feed</span>
+    </button>
+    <button onclick="toggleTab('catalog')" id="nav-btn-catalog" class="nav-item flex flex-col items-center text-zinc-400 hover:text-zinc-200 font-medium text-xs space-y-1 transition">
+      <i data-lucide="compass" class="w-5 h-5"></i>
+      <span>Explorar</span>
+    </button>
+    <button onclick="openCoinsModal()" class="nav-item flex flex-col items-center text-zinc-400 hover:text-zinc-200 font-medium text-xs space-y-1 transition">
+      <i data-lucide="coins" class="w-5 h-5"></i>
+      <span>Monedas</span>
+    </button>
+  </nav>
+
+  <!-- MODAL 1: PAYWALL / UNLOCK EPISODE MODAL -->
+  <div id="modal-paywall" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 transition-all">
+    <div class="bg-darkcard border border-zinc-800 w-full max-w-sm rounded-t-3xl sm:rounded-3xl p-6 text-center space-y-4 shadow-2xl relative animate-in fade-in slide-in-from-bottom duration-200">
+      <button onclick="closePaywallModal()" class="absolute top-4 right-4 text-zinc-400 hover:text-white">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+
+      <div class="w-14 h-14 bg-amber-500/10 text-amber-400 rounded-2xl flex items-center justify-center mx-auto border border-amber-500/20">
+        <i data-lucide="lock" class="w-7 h-7"></i>
+      </div>
+
+      <div>
+        <h3 class="text-xl font-bold text-white">Episodio Bloqueado</h3>
+        <p id="paywall-subtitle" class="text-xs text-zinc-400 mt-1">Este capítulo requiere 10 monedas para desbloquearse.</p>
+      </div>
+
+      <div class="bg-zinc-900/80 p-3 rounded-2xl border border-zinc-800 flex items-center justify-between text-xs">
+        <span class="text-zinc-400">Tus Monedas Actuales:</span>
+        <span class="font-bold text-amber-400 flex items-center">
+          <i data-lucide="coins" class="w-3.5 h-3.5 mr-1"></i> <span id="paywall-user-coins">150</span>
+        </span>
+      </div>
+
+      <div class="space-y-2 pt-2">
+        <button id="paywall-confirm-btn" onclick="confirmUnlockEpisode()" class="w-full bg-gradient-to-r from-amber-500 to-brand-600 hover:from-amber-600 hover:to-brand-700 text-white font-bold py-3 rounded-2xl text-sm transition shadow-lg shadow-amber-500/20 flex items-center justify-center">
+          <i data-lucide="unlock" class="w-4 h-4 mr-2"></i> Desbloquear
+        </button>
+
+        <button onclick="openCoinsModal(); closePaywallModal();" class="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-medium py-2.5 rounded-2xl text-xs transition">
+          Recargar Monedas
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 2: COINS STORE & DAILY REWARD -->
+  <div id="modal-coins" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 transition-all">
+    <div class="bg-darkcard border border-zinc-800 w-full max-w-sm rounded-t-3xl sm:rounded-3xl p-6 space-y-5 shadow-2xl relative">
+      <button onclick="closeCoinsModal()" class="absolute top-4 right-4 text-zinc-400 hover:text-white">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+
+      <div class="text-center">
+        <div class="w-12 h-12 bg-amber-500/10 text-amber-400 rounded-2xl flex items-center justify-center mx-auto mb-2">
+          <i data-lucide="coins" class="w-6 h-6"></i>
+        </div>
+        <h3 class="text-lg font-bold text-white">Bolsa de Monedas</h3>
+        <p class="text-xs text-zinc-400">Usa tus monedas para ver episodios VIP sin interrupciones.</p>
+      </div>
+
+      <!-- Daily Claim Banner -->
+      <div class="bg-gradient-to-r from-brand-900/40 to-amber-900/40 border border-brand-500/30 p-3.5 rounded-2xl flex items-center justify-between">
+        <div>
+          <span class="text-xs font-bold text-amber-300 block">Recompensa Diaria</span>
+          <span class="text-[11px] text-zinc-300">+50 Monedas gratis hoy</span>
+        </div>
+        <button id="daily-claim-btn" onclick="claimDailyReward()" class="bg-amber-500 hover:bg-amber-600 text-black font-bold text-xs px-3 py-1.5 rounded-xl transition shadow">
+          Reclamar
+        </button>
+      </div>
+
+      <!-- Coin Packages -->
+      <div class="space-y-2">
+        <span class="text-xs font-semibold text-zinc-400 block">Paquetes de Recarga</span>
+
+        <div onclick="purchaseCoins(100)" class="cursor-pointer bg-zinc-900 hover:bg-zinc-800/80 p-3 rounded-2xl border border-zinc-800 flex items-center justify-between transition">
+          <div class="flex items-center space-x-3">
+            <div class="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center">
+              <i data-lucide="coins" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <span class="text-sm font-bold text-white block">100 Monedas</span>
+              <span class="text-[10px] text-zinc-400">10 Capítulos VIP</span>
+            </div>
+          </div>
+          <span class="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20">$0.99 USD</span>
+        </div>
+
+        <div onclick="purchaseCoins(500)" class="cursor-pointer bg-zinc-900 hover:bg-zinc-800/80 p-3 rounded-2xl border border-brand-500/30 flex items-center justify-between transition relative overflow-hidden">
+          <div class="flex items-center space-x-3">
+            <div class="w-8 h-8 rounded-xl bg-brand-500/20 text-brand-400 flex items-center justify-center">
+              <i data-lucide="zap" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <span class="text-sm font-bold text-white block">500 Monedas <span class="text-[9px] bg-brand-600 text-white px-1.5 py-0.5 rounded ml-1">POPULAR</span></span>
+              <span class="text-[10px] text-zinc-400">50 Capítulos VIP</span>
+            </div>
+          </div>
+          <span class="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20">$3.99 USD</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 3: EPISODE SELECTOR DRAWER -->
+  <div id="modal-episodes" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-end justify-center p-0">
+    <div class="bg-darkcard border-t border-zinc-800 w-full max-w-sm rounded-t-3xl p-5 space-y-4 shadow-2xl relative max-h-[70vh] flex flex-col">
+      <div class="flex items-center justify-between">
+        <div>
+          <h3 id="drawer-series-title" class="text-base font-bold text-white">Seleccionar Episodio</h3>
+          <p class="text-xs text-zinc-400">Elige qué capítulo reproducir</p>
+        </div>
+        <button onclick="closeEpisodesDrawer()" class="text-zinc-400 hover:text-white p-1">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div id="drawer-episodes-list" class="grid grid-cols-4 gap-2 overflow-y-auto pr-1 flex-1">
+        <!-- Injected dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- API CONFIGURATION (MySQL Backend) ---
+    // Usa URL relativa para que funcione en local y producción
+    const API_URL = 'http://localhost/dramastream/api.php';
+    const USER_ID = 1; // Usuario demo
+
+    // --- DATABASE & STATE MANAGEMENT ---
+    const INITIAL_SERIES_DATA = [
+      {
+        id: "series-1",
+        title: "El Secreto del CEO Multimillonario",
+        category: "CEO",
+        cover: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500&q=80",
+        description: "Un heredero de negocios se hace pasar por chofer para descubrir quién intenta destruir su empresa.",
+        episodes: [
+          { ep: 1, title: "Capítulo 1: El Chofer Misterioso", url: "https://assets.mixkit.co/videos/preview/mixkit-vertical-shot-of-a-waterfall-in-a-forest-42894-large.mp4", isFree: true, likes: 1240 },
+          { ep: 2, title: "Capítulo 2: El Encuentro en la Gala", url: "https://assets.mixkit.co/videos/preview/mixkit-tree-branches-in-the-breeze-1187-large.mp4", isFree: true, likes: 980 },
+          { ep: 3, title: "Capítulo 3: Revelación Inesperada", url: "https://assets.mixkit.co/videos/preview/mixkit-vertical-shot-of-a-waterfall-in-a-forest-42894-large.mp4", isFree: false, cost: 10, likes: 1420 },
+          { ep: 4, title: "Capítulo 4: El Contrato Falso", url: "https://assets.mixkit.co/videos/preview/mixkit-tree-branches-in-the-breeze-1187-large.mp4", isFree: false, cost: 10, likes: 890 },
+          { ep: 5, title: "Capítulo 5: Venganza en el Imperio", url: "https://assets.mixkit.co/videos/preview/mixkit-vertical-shot-of-a-waterfall-in-a-forest-42894-large.mp4", isFree: false, cost: 10, likes: 2100 }
+        ]
+      },
+      {
+        id: "series-2",
+        title: "La Venganza de la Esposa Rechazada",
+        category: "Venganza",
+        cover: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&q=80",
+        description: "Traicionada por su familia, regresa 5 años después como la inversora más poderosa de la ciudad.",
+        episodes: [
+          { ep: 1, title: "Capítulo 1: La Traición", url: "https://assets.mixkit.co/videos/preview/mixkit-tree-branches-in-the-breeze-1187-large.mp4", isFree: true, likes: 3100 },
+          { ep: 2, title: "Capítulo 2: El Regreso de la Reina", url: "https://assets.mixkit.co/videos/preview/mixkit-vertical-shot-of-a-waterfall-in-a-forest-42894-large.mp4", isFree: true, likes: 2750 },
+          { ep: 3, title: "Capítulo 3: Caída del Imperio Traidor", url: "https://assets.mixkit.co/videos/preview/mixkit-tree-branches-in-the-breeze-1187-large.mp4", isFree: false, cost: 10, likes: 1980 }
+        ]
+      },
+      {
+        id: "series-3",
+        title: "Bajo la Lluvia de Seúl",
+        category: "Romance",
+        cover: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=500&q=80",
+        description: "Dos desconocidos se conocen en un café durante una tormenta y descubren que sus destinos están conectados.",
+        episodes: [
+          { ep: 1, title: "Capítulo 1: El Café y la Tormenta", url: "https://assets.mixkit.co/videos/preview/mixkit-vertical-shot-of-a-waterfall-in-a-forest-42894-large.mp4", isFree: true, likes: 4560 },
+          { ep: 2, title: "Capítulo 2: La Cita Doblada", url: "https://assets.mixkit.co/videos/preview/mixkit-tree-branches-in-the-breeze-1187-large.mp4", isFree: false, cost: 10, likes: 3100 }
+        ]
+      },
+      {
+        id: "series-4",
+        title: "El Reino de las Sombras",
+        category: "Fantasía",
+        cover: "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=500&q=80",
+        description: "Una joven heredera descubre que puede ver criaturas mágicas ocultas en el mundo moderno.",
+        episodes: [
+          { ep: 1, title: "Capítulo 1: La Dama de la Niebla", url: "https://assets.mixkit.co/videos/preview/mixkit-vertical-shot-of-a-waterfall-in-a-forest-42894-large.mp4", isFree: true, likes: 5670 },
+          { ep: 2, title: "Capítulo 2: El Pacto Prohibido", url: "https://assets.mixkit.co/videos/preview/mixkit-tree-branches-in-the-breeze-1187-large.mp4", isFree: true, likes: 4320 },
+          { ep: 3, title: "Capítulo 3: El Portal en el Bosque", url: "https://assets.mixkit.co/videos/preview/mixkit-vertical-shot-of-a-waterfall-in-a-forest-42894-large.mp4", isFree: false, cost: 10, likes: 2210 }
+        ]
+      },
+      {
+        id: "series-test",
+        title: "🎬 SERIE DE PRUEBA - Video Local",
+        category: "CEO",
+        cover: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500&q=80",
+        description: "Esta serie usa un video local para probar el reproductor sin internet. Copia tus videos a C:\\xampp\\htdocs\\videos\\",
+        episodes: [
+          { ep: 1, title: "Capítulo 1: Prueba del Reproductor", url: "http://localhost/videos/test-video.mp4", isFree: true, likes: 999 },
+          { ep: 2, title: "Capítulo 2: Video VIP de Prueba", url: "http://localhost/videos/test-video.mp4", isFree: false, cost: 10, likes: 500 }
+        ]
+      }
+    ];
+
+    let state = {
+      series: JSON.parse(localStorage.getItem('drama_series')) || INITIAL_SERIES_DATA,
+      userCoins: parseInt(localStorage.getItem('drama_coins')) || 150,
+      unlockedEpisodes: JSON.parse(localStorage.getItem('drama_unlocked')) || ['series-1_ep1', 'series-1_ep2', 'series-2_ep1', 'series-2_ep2', 'series-3_ep1', 'series-4_ep1', 'series-4_ep2'],
+      likedEpisodes: JSON.parse(localStorage.getItem('drama_likes')) || [],
+      currentSeriesId: "series-1",
+      currentEpisodeNum: 1,
+      pendingUnlock: null,
+      dailyClaimed: localStorage.getItem('drama_daily') === new Date().toDateString(),
+      currentFilter: 'all',
+      currentSearch: ''
+    };
+
+    // --- API HELPER FUNCTIONS ---
+    async function apiGet(action, params = {}) {
+      const query = new URLSearchParams({ action, ...params }).toString();
+      const res = await fetch(`${API_URL}?${query}`);
+      return res.json();
+    }
+
+    async function apiPost(action, data = {}) {
+      const res = await fetch(`${API_URL}?action=${action}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      return res.json();
+    }
+
+    // Load data from MySQL database
+    async function loadFromDatabase() {
+      try {
+        // Load series from database
+        const seriesData = await apiGet('series');
+        if (Array.isArray(seriesData) && seriesData.length > 0) {
+          state.series = seriesData.map(s => ({
+            id: s.id,
+            title: s.title,
+            category: s.category,
+            cover: s.cover,
+            description: s.description,
+            episodes: (s.episodes || []).map(e => ({
+              ep: e.ep_num,
+              title: e.title,
+              url: e.video_url,
+              isFree: !!e.is_free,
+              cost: e.cost,
+              likes: e.likes
+            }))
+          }));
+        }
+
+        // Load user data
+        const userData = await apiGet('user', { id: USER_ID });
+        if (userData && userData.coins !== undefined) {
+          state.userCoins = userData.coins;
+          state.unlockedEpisodes = (userData.unlocked || []).map(u => `${u.series_id}_ep${u.ep_num}`);
+        }
+
+        updateUI();
+        renderFeed();
+        lucide.createIcons();
+      } catch (err) {
+        console.error('Error loading from database:', err);
+        // Fallback to localStorage
+        state.series = JSON.parse(localStorage.getItem('drama_series')) || INITIAL_SERIES_DATA;
+        state.userCoins = parseInt(localStorage.getItem('drama_coins')) || 150;
+        state.unlockedEpisodes = JSON.parse(localStorage.getItem('drama_unlocked')) || [];
+        updateUI();
+        renderFeed();
+        lucide.createIcons();
+      }
+    }
+
+    function saveState() {
+      // Keep localStorage as backup
+      localStorage.setItem('drama_series', JSON.stringify(state.series));
+      localStorage.setItem('drama_coins', state.userCoins.toString());
+      localStorage.setItem('drama_unlocked', JSON.stringify(state.unlockedEpisodes));
+      localStorage.setItem('drama_likes', JSON.stringify(state.likedEpisodes));
+      updateUI();
+    }
+
+    function updateUI() {
+      document.getElementById('user-coins-display').innerText = state.userCoins;
+      document.getElementById('paywall-user-coins').innerText = state.userCoins;
+      
+      const claimBtn = document.getElementById('daily-claim-btn');
+      if (state.dailyClaimed) {
+        claimBtn.innerText = "Reclamado";
+        claimBtn.disabled = true;
+        claimBtn.classList.replace('bg-amber-500', 'bg-zinc-700');
+        claimBtn.classList.replace('text-black', 'text-zinc-400');
+      }
+    }
+
+    // --- TOAST NOTIFICATION ---
+    let toastTimeout = null;
+    function showToast(message, isError = false) {
+      const toast = document.getElementById('toast');
+      const toastMsg = document.getElementById('toast-message');
+      const icon = toast.querySelector('i');
+      
+      toastMsg.innerText = message;
+      icon.className = `w-4 h-4 ${isError ? 'text-rose-400' : 'text-emerald-400'}`;
+      icon.setAttribute('data-lucide', isError ? 'alert-circle' : 'check-circle-2');
+      
+      toast.classList.remove('opacity-0');
+      toast.classList.add('opacity-100');
+      
+      if (toastTimeout) clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        toast.classList.add('opacity-0');
+        toast.classList.remove('opacity-100');
+      }, 2500);
+    }
+
+    // --- NAVIGATION TAB SYSTEM ---
+    function toggleTab(tab) {
+      document.getElementById('view-feed').classList.add('hidden');
+      document.getElementById('view-catalog').classList.add('hidden');
+      document.getElementById('view-admin').classList.add('hidden');
+      document.getElementById('view-code').classList.add('hidden');
+
+      document.getElementById('nav-btn-feed').className = 'nav-item flex flex-col items-center text-zinc-400 hover:text-zinc-200 font-medium text-xs space-y-1 transition';
+      document.getElementById('nav-btn-catalog').className = 'nav-item flex flex-col items-center text-zinc-400 hover:text-zinc-200 font-medium text-xs space-y-1 transition';
+
+      if (tab === 'feed') {
+        document.getElementById('view-feed').classList.remove('hidden');
+        document.getElementById('nav-btn-feed').className = 'nav-item flex flex-col items-center text-brand-500 font-medium text-xs space-y-1 transition';
+        renderFeed();
+      } else if (tab === 'catalog') {
+        document.getElementById('view-catalog').classList.remove('hidden');
+        document.getElementById('nav-btn-catalog').className = 'nav-item flex flex-col items-center text-brand-500 font-medium text-xs space-y-1 transition';
+        renderCatalog(state.currentFilter);
+      } else if (tab === 'admin') {
+        document.getElementById('view-admin').classList.remove('hidden');
+        renderAdminSeriesList();
+      } else if (tab === 'code') {
+        document.getElementById('view-code').classList.remove('hidden');
+      }
+      lucide.createIcons();
+    }
+
+    // --- REEL FEED RENDERING ---
+    function renderFeed() {
+      const container = document.getElementById('feed-scroll-container');
+      container.innerHTML = '';
+
+      const currentSeries = state.series.find(s => s.id === state.currentSeriesId) || state.series[0];
+
+      currentSeries.episodes.forEach((ep) => {
+        const epKey = `${currentSeries.id}_ep${ep.ep}`;
+        const isUnlocked = ep.isFree || state.unlockedEpisodes.includes(epKey);
+        const isLiked = state.likedEpisodes.includes(epKey);
+
+        const reelItem = document.createElement('div');
+        reelItem.className = 'w-full h-full snap-center-item relative bg-black flex flex-col justify-between overflow-hidden shrink-0';
+        reelItem.setAttribute('data-ep', ep.ep);
+
+        if (isUnlocked) {
+          reelItem.innerHTML = `
+            <!-- Video Player -->
+            <video 
+              class="w-full h-full object-cover cursor-pointer"
+              src="${ep.url}"
+              loop
+              muted
+              playsinline
+              preload="metadata"
+              onclick="toggleVideoPlay(this)"
+            ></video>
+
+            <!-- Play/Pause Overlay Indicator -->
+            <div class="play-overlay hidden absolute inset-0 flex items-center justify-center bg-black/20 pointer-events-none">
+              <div class="w-16 h-16 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center text-white">
+                <i data-lucide="play" class="w-8 h-8 fill-current ml-1"></i>
+              </div>
+            </div>
+
+            <!-- Side Action Buttons -->
+            <div class="absolute right-3 bottom-24 flex flex-col items-center space-y-4 z-20">
+              <button onclick="toggleLike('${epKey}', this)" class="flex flex-col items-center group">
+                <div class="w-11 h-11 rounded-full bg-zinc-900/60 backdrop-blur-md border border-white/10 flex items-center justify-center ${isLiked ? 'text-brand-500' : 'text-white'} group-hover:scale-110 transition">
+                  <i data-lucide="heart" class="w-5 h-5 ${isLiked ? 'fill-brand-500' : ''}"></i>
+                </div>
+                <span class="text-[10px] text-white font-medium mt-1 drop-shadow">${ep.likes + (isLiked ? 1 : 0)}</span>
+              </button>
+
+              <button onclick="openEpisodesDrawer('${currentSeries.id}')" class="flex flex-col items-center group">
+                <div class="w-11 h-11 rounded-full bg-zinc-900/60 backdrop-blur-md border border-white/10 flex items-center justify-center text-white group-hover:scale-110 transition">
+                  <i data-lucide="layers" class="w-5 h-5"></i>
+                </div>
+                <span class="text-[10px] text-white font-medium mt-1 drop-shadow">Caps</span>
+              </button>
+
+              <button onclick="shareSeries('${currentSeries.title}')" class="flex flex-col items-center group">
+                <div class="w-11 h-11 rounded-full bg-zinc-900/60 backdrop-blur-md border border-white/10 flex items-center justify-center text-white group-hover:scale-110 transition">
+                  <i data-lucide="share-2" class="w-5 h-5"></i>
+                </div>
+                <span class="text-[10px] text-white font-medium mt-1 drop-shadow">Compartir</span>
+              </button>
+            </div>
+
+            <!-- Bottom Content Metadata -->
+            <div class="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black via-black/60 to-transparent z-10 pt-12">
+              <div class="flex items-center space-x-2 mb-1.5">
+                <span class="bg-brand-600 text-white font-bold text-[10px] px-2 py-0.5 rounded-full">
+                  Cap. ${ep.ep} / ${currentSeries.episodes.length}
+                </span>
+                <span class="bg-zinc-800/80 text-zinc-300 text-[10px] px-2 py-0.5 rounded-full border border-white/10">
+                  ${currentSeries.category}
+                </span>
+              </div>
+              <h2 class="text-sm font-bold text-white drop-shadow">${ep.title}</h2>
+              <p class="text-xs text-zinc-300 line-clamp-1 mt-0.5">${currentSeries.description}</p>
+            </div>
+          `;
+        } else {
+          // Locked Episode Paywall View Inside Reel
+          reelItem.innerHTML = `
+            <div class="w-full h-full relative flex flex-col items-center justify-center p-6 text-center bg-zinc-950">
+              <img src="${currentSeries.cover}" class="absolute inset-0 w-full h-full object-cover opacity-20 blur-md">
+              <div class="absolute inset-0 bg-gradient-to-b from-black/80 via-black/90 to-black"></div>
+
+              <div class="relative z-10 space-y-4 max-w-xs">
+                <div class="w-16 h-16 rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/30 flex items-center justify-center mx-auto shadow-xl">
+                  <i data-lucide="lock" class="w-8 h-8"></i>
+                </div>
+
+                <div>
+                  <span class="text-xs font-semibold text-amber-400 uppercase tracking-wider">Episodio VIP</span>
+                  <h3 class="text-lg font-bold text-white mt-0.5">${ep.title}</h3>
+                  <p class="text-xs text-zinc-400 mt-1">Desbloquea este capítulo para continuar viendo la historia.</p>
+                </div>
+
+                <button onclick="promptUnlockEpisode('${currentSeries.id}', ${ep.ep})" class="w-full bg-gradient-to-r from-amber-500 to-brand-600 hover:from-amber-600 hover:to-brand-700 text-white font-bold py-3 rounded-2xl text-xs transition shadow-lg shadow-amber-500/20 flex items-center justify-center space-x-2">
+                  <i data-lucide="key" class="w-4 h-4"></i>
+                  <span>Desbloquear por ${ep.cost || 10} Monedas</span>
+                </button>
+              </div>
+            </div>
+          `;
+        }
+
+        container.appendChild(reelItem);
+      });
+
+      lucide.createIcons();
+      
+      // Setup IntersectionObserver for autoplay on scroll (TikTok-style)
+      setupFeedAutoplay();
+    }
+
+    // --- AUTOPLAY ON SCROLL (TikTok Style) ---
+    let feedObserver = null;
+    function setupFeedAutoplay() {
+      // Clean up previous observer
+      if (feedObserver) feedObserver.disconnect();
+
+      const videos = document.querySelectorAll('#feed-scroll-container video');
+      
+      feedObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          const video = entry.target;
+          if (entry.isIntersecting) {
+            // Pause all other videos first
+            document.querySelectorAll('#feed-scroll-container video').forEach(v => {
+              if (v !== video) v.pause();
+            });
+            // Play the visible video
+            video.play().catch(() => {});
+            const overlay = video.parentElement.querySelector('.play-overlay');
+            if (overlay) overlay.classList.add('hidden');
+          } else {
+            video.pause();
+          }
+        });
+      }, { threshold: 0.7 });
+
+      videos.forEach(video => feedObserver.observe(video));
+    }
+
+    function toggleVideoPlay(video) {
+      const overlay = video.parentElement.querySelector('.play-overlay');
+      if (video.paused) {
+        // Pause all other videos
+        document.querySelectorAll('#feed-scroll-container video').forEach(v => {
+          if (v !== video) v.pause();
+        });
+        video.play();
+        if (overlay) overlay.classList.add('hidden');
+      } else {
+        video.pause();
+        if (overlay) overlay.classList.remove('hidden');
+      }
+    }
+
+    // --- PAYWALL & UNLOCK LOGIC ---
+    function promptUnlockEpisode(seriesId, epNum) {
+      const series = state.series.find(s => s.id === seriesId);
+      const ep = series?.episodes.find(e => e.ep === epNum);
+      const cost = ep?.cost || 10;
+
+      state.pendingUnlock = { seriesId, epNum, cost };
+      
+      // Update paywall modal with real cost
+      document.getElementById('paywall-subtitle').innerText = `Este capítulo requiere ${cost} monedas para desbloquearse.`;
+      document.getElementById('paywall-confirm-btn').innerHTML = `
+        <i data-lucide="unlock" class="w-4 h-4 mr-2"></i> Desbloquear por ${cost} Monedas
+      `;
+      
+      document.getElementById('modal-paywall').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closePaywallModal() {
+      document.getElementById('modal-paywall').classList.add('hidden');
+      state.pendingUnlock = null;
+    }
+
+    async function confirmUnlockEpisode() {
+      if (!state.pendingUnlock) return;
+
+      const { seriesId, epNum, cost } = state.pendingUnlock;
+      const epKey = `${seriesId}_ep${epNum}`;
+
+      if (state.userCoins >= cost) {
+        // Call API to unlock in database
+        try {
+          const result = await apiPost('unlock', { userId: USER_ID, seriesId, epNum });
+          if (result.success) {
+            state.userCoins = result.coinsLeft;
+            state.unlockedEpisodes.push(epKey);
+            saveState();
+            closePaywallModal();
+            renderFeed();
+            showToast("¡Episodio desbloqueado con éxito!");
+          } else {
+            showToast(result.error || "Error al desbloquear", true);
+            closePaywallModal();
+          }
+        } catch (err) {
+          // Fallback to local
+          state.userCoins -= cost;
+          state.unlockedEpisodes.push(epKey);
+          saveState();
+          closePaywallModal();
+          renderFeed();
+          showToast("¡Episodio desbloqueado con éxito!");
+        }
+      } else {
+        showToast("No tienes suficientes monedas. Recarga en la tienda.", true);
+        closePaywallModal();
+        openCoinsModal();
+      }
+    }
+
+    // --- CATALOG RENDER ---
+    function renderCatalog(filter) {
+      state.currentFilter = filter;
+      const grid = document.getElementById('catalog-grid');
+      const emptyState = document.getElementById('catalog-empty');
+      grid.innerHTML = '';
+
+      let filtered = filter === 'all' 
+        ? state.series 
+        : state.series.filter(s => s.category.toLowerCase() === filter.toLowerCase());
+
+      // Apply search filter
+      if (state.currentSearch) {
+        const searchTerm = state.currentSearch.toLowerCase();
+        filtered = filtered.filter(s => s.title.toLowerCase().includes(searchTerm));
+      }
+
+      if (filtered.length === 0) {
+        emptyState.classList.remove('hidden');
+      } else {
+        emptyState.classList.add('hidden');
+      }
+
+      filtered.forEach(s => {
+        const card = document.createElement('div');
+        card.className = 'bg-darkcard border border-zinc-800 rounded-2xl overflow-hidden cursor-pointer hover:border-brand-500/50 transition group';
+        card.onclick = () => {
+          state.currentSeriesId = s.id;
+          toggleTab('feed');
+          renderFeed();
+        };
+
+        card.innerHTML = `
+          <div class="aspect-vertical w-full relative overflow-hidden bg-zinc-900">
+            <img src="${s.cover}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" loading="lazy">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+            <span class="absolute top-2 left-2 bg-brand-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-md">
+              ${s.episodes.length} Episodios
+            </span>
+          </div>
+          <div class="p-3">
+            <span class="text-[10px] text-amber-400 font-semibold block">${s.category}</span>
+            <h3 class="text-xs font-bold text-white line-clamp-1 mt-0.5">${s.title}</h3>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+
+      lucide.createIcons();
+    }
+
+    function filterCatalog(category) {
+      document.querySelectorAll('.cat-btn').forEach(btn => {
+        btn.classList.remove('bg-brand-600', 'text-white');
+        btn.classList.add('bg-zinc-800', 'text-zinc-300');
+      });
+      event.currentTarget.classList.remove('bg-zinc-800', 'text-zinc-300');
+      event.currentTarget.classList.add('bg-brand-600', 'text-white');
+      renderCatalog(category);
+    }
+
+    function handleSearch() {
+      state.currentSearch = document.getElementById('search-input').value;
+      renderCatalog(state.currentFilter);
+    }
+
+    // --- COIN STORE & DAILY CLAIM ---
+    function openCoinsModal() {
+      document.getElementById('modal-coins').classList.remove('hidden');
+    }
+
+    function closeCoinsModal() {
+      document.getElementById('modal-coins').classList.add('hidden');
+    }
+
+    async function claimDailyReward() {
+      if (state.dailyClaimed) return;
+      state.userCoins += 50;
+      state.dailyClaimed = true;
+      localStorage.setItem('drama_daily', new Date().toDateString());
+      // Update coins in database
+      try {
+        await apiPost('add_coins', { userId: USER_ID, amount: 50 });
+      } catch (err) {}
+      saveState();
+      showToast("¡Has recibido +50 Monedas gratis!");
+    }
+
+    async function purchaseCoins(amount) {
+      state.userCoins += amount;
+      // Update coins in database
+      try {
+        const result = await apiPost('add_coins', { userId: USER_ID, amount });
+        if (result.coins) state.userCoins = result.coins;
+      } catch (err) {}
+      saveState();
+      showToast(`¡Compra simulada exitosa! +${amount} monedas.`);
+      closeCoinsModal();
+    }
+
+    // --- EPISODES DRAWER ---
+    function openEpisodesDrawer(seriesId) {
+      const series = state.series.find(s => s.id === seriesId);
+      if (!series) return;
+
+      document.getElementById('drawer-series-title').innerText = series.title;
+      const list = document.getElementById('drawer-episodes-list');
+      list.innerHTML = '';
+
+      series.episodes.forEach(ep => {
+        const epKey = `${series.id}_ep${ep.ep}`;
+        const isUnlocked = ep.isFree || state.unlockedEpisodes.includes(epKey);
+
+        const btn = document.createElement('button');
+        btn.onclick = () => {
+          closeEpisodesDrawer();
+          if (!isUnlocked) {
+            promptUnlockEpisode(series.id, ep.ep);
+          } else {
+            // Navigate to feed and scroll to the specific episode
+            state.currentSeriesId = series.id;
+            state.currentEpisodeNum = ep.ep;
+            toggleTab('feed');
+            setTimeout(() => {
+              const container = document.getElementById('feed-scroll-container');
+              const targetItem = container.querySelector(`[data-ep="${ep.ep}"]`);
+              if (targetItem) {
+                const index = Array.from(container.children).indexOf(targetItem);
+                container.scrollTo({
+                  top: index * container.clientHeight,
+                  behavior: 'smooth'
+                });
+              }
+            }, 150);
+          }
+        };
+
+        btn.className = `p-3 rounded-xl border text-center transition flex flex-col items-center justify-center space-y-1 ${
+          isUnlocked 
+            ? 'bg-zinc-900 border-zinc-800 text-white hover:border-brand-500' 
+            : 'bg-zinc-950 border-amber-500/30 text-zinc-500 hover:border-amber-500'
+        }`;
+
+        btn.innerHTML = `
+          <span class="text-xs font-bold">Cap ${ep.ep}</span>
+          <i data-lucide="${isUnlocked ? 'play' : 'lock'}" class="w-3.5 h-3.5 ${isUnlocked ? 'text-brand-500' : 'text-amber-400'}"></i>
+        `;
+
+        list.appendChild(btn);
+      });
+
+      document.getElementById('modal-episodes').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closeEpisodesDrawer() {
+      document.getElementById('modal-episodes').classList.add('hidden');
+    }
+
+    // --- ADMIN CREATOR STUDIO ---
+    // Add dynamic episode field
+    function addEpisodeField() {
+      const container = document.getElementById('episodes-container');
+      const count = container.querySelectorAll('.episode-field').length + 1;
+      
+      const field = document.createElement('div');
+      field.className = 'episode-field bg-zinc-950/60 border border-zinc-800 rounded-lg p-2.5';
+      field.innerHTML = `
+        <div class="flex items-center justify-between mb-1.5">
+          <span class="text-[10px] font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-md">Episodio ${count} - VIP</span>
+          <button type="button" onclick="removeEpisodeField(this)" class="text-zinc-500 hover:text-rose-500 transition">
+            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+          </button>
+        </div>
+        <div class="flex items-center space-x-2">
+          <input type="url" class="ep-url flex-1 bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-brand-500" placeholder="URL del video MP4 (Vertical 9:16)">
+          <div class="flex items-center space-x-1 bg-zinc-900 border border-zinc-800 rounded-lg px-2 py-1.5">
+            <i data-lucide="coins" class="w-3 h-3 text-amber-400"></i>
+            <input type="number" class="ep-cost w-12 bg-transparent text-xs text-white focus:outline-none" min="1" max="100" value="10">
+          </div>
+        </div>
+      `;
+      
+      container.appendChild(field);
+      lucide.createIcons();
+    }
+
+    // Remove dynamic episode field
+    function removeEpisodeField(btn) {
+      const field = btn.closest('.episode-field');
+      if (field) field.remove();
+      // Renumber episodes
+      const fields = document.querySelectorAll('#episodes-container .episode-field');
+      fields.forEach((f, i) => {
+        const badge = f.querySelector('span');
+        if (i === 0) {
+          badge.className = 'text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md';
+          badge.innerText = 'Episodio 1 - GRATIS';
+        } else {
+          badge.className = 'text-[10px] font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-md';
+          badge.innerText = `Episodio ${i + 1} - VIP`;
+        }
+      });
+      lucide.createIcons();
+    }
+
+    async function handleAddSeries(e) {
+      e.preventDefault();
+      const title = document.getElementById('form-title').value;
+      const category = document.getElementById('form-category').value;
+      const cover = document.getElementById('form-cover').value;
+      const desc = document.getElementById('form-desc').value;
+
+      // Collect all episode fields
+      const episodeFields = document.querySelectorAll('#episodes-container .episode-field');
+      const episodes = [];
+
+      episodeFields.forEach((field, index) => {
+        const url = field.querySelector('.ep-url').value.trim();
+        if (!url) return; // Skip empty fields
+
+        const isFirst = index === 0;
+        const cost = isFirst ? 0 : (parseInt(field.querySelector('.ep-cost')?.value) || 10);
+
+        episodes.push({
+          ep: index + 1,
+          title: `${title} - Cap ${index + 1}`,
+          url,
+          isFree: isFirst,
+          cost,
+          likes: 0
+        });
+      });
+
+      if (episodes.length === 0) {
+        showToast("Debes añadir al menos un episodio con URL.", true);
+        return;
+      }
+
+      // Save to database via API
+      try {
+        const result = await apiPost('add_series', {
+          title, category, cover, description: desc, episodes
+        });
+        if (result.success) {
+          showToast(`¡Serie publicada con ${episodes.length} episodios!`);
+        } else {
+          showToast(result.error || "Error al publicar", true);
+        }
+      } catch (err) {
+        showToast("Error de conexión con la base de datos", true);
+      }
+
+      // Reload from database
+      await loadFromDatabase();
+      document.getElementById('add-series-form').reset();
+      // Reset episodes container to just episode 1
+      document.getElementById('episodes-container').innerHTML = `
+        <div class="episode-field bg-zinc-950/60 border border-zinc-800 rounded-lg p-2.5">
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md">Episodio 1 - GRATIS</span>
+          </div>
+          <input type="url" class="ep-url w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-brand-500" placeholder="URL del video MP4 (Vertical 9:16)" required>
+        </div>
+      `;
+      renderAdminSeriesList();
+    }
+
+    function renderAdminSeriesList() {
+      const container = document.getElementById('admin-series-list');
+      const countBadge = document.getElementById('admin-series-count');
+      container.innerHTML = '';
+      countBadge.innerText = `${state.series.length} series`;
+
+      state.series.forEach(s => {
+        const item = document.createElement('div');
+        item.className = 'bg-zinc-900 border border-zinc-800 p-3 rounded-xl flex items-center justify-between';
+        item.innerHTML = `
+          <div class="flex items-center space-x-3">
+            <img src="${s.cover}" class="w-10 h-14 object-cover rounded-lg bg-zinc-800">
+            <div>
+              <h4 class="text-xs font-bold text-white">${s.title}</h4>
+              <span class="text-[10px] text-zinc-400">${s.episodes.length} Episodios • ${s.category}</span>
+            </div>
+          </div>
+          <button onclick="deleteSeries('${s.id}')" class="text-zinc-500 hover:text-rose-500 p-2">
+            <i data-lucide="trash-2" class="w-4 h-4"></i>
+          </button>
+        `;
+        container.appendChild(item);
+      });
+      lucide.createIcons();
+    }
+
+    async function deleteSeries(id) {
+      if (confirm("¿Deseas eliminar esta serie de tu servidor?")) {
+        // Delete from database
+        try {
+          await apiPost('delete_series', { id });
+        } catch (err) {}
+        state.series = state.series.filter(s => s.id !== id);
+        saveState();
+        renderAdminSeriesList();
+        showToast("Serie eliminada.");
+      }
+    }
+
+    function resetDefaultData() {
+      if (confirm("¿Restablecer los datos por defecto?")) {
+        localStorage.clear();
+        state.series = INITIAL_SERIES_DATA;
+        state.userCoins = 150;
+        state.unlockedEpisodes = ['series-1_ep1', 'series-1_ep2', 'series-2_ep1', 'series-2_ep2', 'series-3_ep1', 'series-4_ep1', 'series-4_ep2'];
+        saveState();
+        location.reload();
+      }
+    }
+
+    // --- HELPER FUNCTIONS ---
+    async function toggleLike(epKey, btn) {
+      const [seriesId, epPart] = epKey.split('_ep');
+      const epNum = parseInt(epPart);
+      const isLiked = state.likedEpisodes.includes(epKey);
+      
+      if (isLiked) {
+        state.likedEpisodes = state.likedEpisodes.filter(k => k !== epKey);
+      } else {
+        state.likedEpisodes.push(epKey);
+      }
+      
+      // Update likes in database
+      try {
+        await apiPost('like', { seriesId, epNum, liked: !isLiked });
+      } catch (err) {}
+      
+      saveState();
+      renderFeed();
+    }
+
+    function shareSeries(title) {
+      if (navigator.share) {
+        navigator.share({ title, text: `¡Mira la serie ${title} en LuiTechStream!` });
+      } else {
+        navigator.clipboard.writeText(`Mira ${title} en LuiTechStream`);
+        showToast("Enlace copiado al portapapeles.");
+      }
+    }
+
+    function copyToClipboard(elementId) {
+      const text = document.getElementById(elementId).innerText;
+      navigator.clipboard.writeText(text);
+      showToast("¡Código copiado al portapapeles!");
+    }
+
+    // Initialize App - Load from MySQL database
+    window.onload = () => {
+      loadFromDatabase();
+    };
+  </script>
+</body>
+</html>
+
