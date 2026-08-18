@@ -10,11 +10,12 @@
  * ============================================
  */
 
-// Configuración de la base de datos
-define('DB_HOST', 'luitechstream-luitechstream-05puer');
-define('DB_USER', 'luitechStream');
-define('DB_PASS', 'Castro161219@');
-define('DB_NAME', 'luitechStream');
+// Configuración de la base de datos (usa variables de entorno para producción)
+define('DB_HOST', getenv('DB_HOST') ?: 'luitechstream-luitechstream-05puer');
+define('DB_PORT', getenv('DB_PORT') ?: '3306');
+define('DB_USER', getenv('DB_USERNAME') ?: 'luitechStream');
+define('DB_PASS', getenv('DB_PASSWORD') ?: 'Castro161219@');
+define('DB_NAME', getenv('DB_DATABASE') ?: 'luitechStream');
 
 // Configurar cabeceras para API JSON
 header('Content-Type: application/json');
@@ -32,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 function getDB() {
     try {
         $pdo = new PDO(
-            'mysql:host=' . DB_HOST . ';dbname=' . DB_NAME . ';charset=utf8mb4',
+            'mysql:host=' . DB_HOST . ';port=' . DB_PORT . ';dbname=' . DB_NAME . ';charset=utf8mb4',
             DB_USER,
             DB_PASS,
             [
