@@ -10,11 +10,11 @@
  * ============================================
  */
 
-// Configuración de la base de datos (Laragon)
-define('DB_HOST', 'localhost');
-define('DB_USER', 'root');
-define('DB_PASS', '');
-define('DB_NAME', 'dramastream');
+// Configuración de la base de datos
+define('DB_HOST', 'luitechstream-luitechstream-05puer');
+define('DB_USER', 'luitechStream');
+define('DB_PASS', 'Castro161219@');
+define('DB_NAME', 'luitechStream');
 
 // Configurar cabeceras para API JSON
 header('Content-Type: application/json');

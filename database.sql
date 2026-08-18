@@ -3,8 +3,8 @@
 -- Ejecutar en phpMyAdmin: http://localhost/phpmyadmin
 -- ============================================
 
-CREATE DATABASE IF NOT EXISTS dramastream CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE dramastream;
+CREATE DATABASE IF NOT EXISTS luitechStream CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE luitechStream;
 
 -- ============================================
 -- Tabla de series
