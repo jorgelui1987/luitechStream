@@ -78,6 +78,7 @@ try {
         ON DUPLICATE KEY UPDATE title = VALUES(title)");
     
     // Insertar episodios (usando videos públicos accesibles)
+    // ON DUPLICATE KEY UPDATE también actualiza video_url para corregir URLs antiguas
     $pdo->exec("INSERT INTO episodes (series_id, ep_num, title, video_url, is_free, cost, likes) VALUES
         ('series-1', 1, 'Capítulo 1: El Chofer Misterioso', 'https://www.w3schools.com/html/mov_bbb.mp4', TRUE, 0, 1240),
         ('series-1', 2, 'Capítulo 2: El Encuentro en la Gala', 'https://www.w3schools.com/html/movie.mp4', TRUE, 0, 980),
@@ -92,7 +93,7 @@ try {
         ('series-4', 1, 'Capítulo 1: La Dama de la Niebla', 'https://www.w3schools.com/html/movie.mp4', TRUE, 0, 5670),
         ('series-4', 2, 'Capítulo 2: El Pacto Prohibido', 'https://www.w3schools.com/html/mov_bbb.mp4', TRUE, 0, 4320),
         ('series-4', 3, 'Capítulo 3: El Portal en el Bosque', 'https://www.w3schools.com/html/movie.mp4', FALSE, 10, 2210)
-        ON DUPLICATE KEY UPDATE title = VALUES(title)");
+        ON DUPLICATE KEY UPDATE title = VALUES(title), video_url = VALUES(video_url)");
     
     // Insertar desbloqueos iniciales
     $pdo->exec("INSERT IGNORE INTO unlocks (user_id, series_id, ep_num) VALUES
