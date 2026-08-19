@@ -3,6 +3,13 @@ FROM php:8.2-apache
 # Instalar extensiones de PHP necesarias
 RUN docker-php-ext-install pdo pdo_mysql
 
+# Aumentar límites de subida de archivos
+RUN echo "upload_max_filesize = 500M" > /usr/local/etc/php/conf.d/uploads.ini \
+    && echo "post_max_size = 500M" >> /usr/local/etc/php/conf.d/uploads.ini \
+    && echo "max_execution_time = 300" >> /usr/local/etc/php/conf.d/uploads.ini \
+    && echo "max_input_time = 300" >> /usr/local/etc/php/conf.d/uploads.ini \
+    && echo "memory_limit = 256M" >> /usr/local/etc/php/conf.d/uploads.ini
+
 # Habilitar mod_rewrite de Apache
 RUN a2enmod rewrite
 
