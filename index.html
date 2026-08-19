@@ -1458,9 +1458,13 @@ app.listen(3000, () => console.log('Servidor corriendo en puerto 3000'));
       const episodeFields = document.querySelectorAll('#episodes-container .episode-field');
       const episodes = [];
 
+      let hasEmptyUrl = false;
       episodeFields.forEach((field, index) => {
         const url = field.querySelector('.ep-url').value.trim();
-        if (!url) return; // Skip empty fields
+        if (!url) {
+          hasEmptyUrl = true;
+          return;
+        }
 
         const isFirst = index === 0;
         const cost = isFirst ? 0 : (parseInt(field.querySelector('.ep-cost')?.value) || 10);
@@ -1474,6 +1478,11 @@ app.listen(3000, () => console.log('Servidor corriendo en puerto 3000'));
           likes: 0
         });
       });
+
+      if (hasEmptyUrl) {
+        showToast("Todos los episodios deben tener una URL de video MP4 o subir un archivo.", true);
+        return;
+      }
 
       if (episodes.length === 0) {
         showToast("Debes añadir al menos un episodio con URL.", true);
