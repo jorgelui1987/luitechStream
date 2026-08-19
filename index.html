@@ -1025,6 +1025,13 @@ app.listen(3000, () => console.log('Servidor corriendo en puerto 3000'));
 
             <!-- Side Action Buttons -->
             <div class="absolute right-3 bottom-24 flex flex-col items-center space-y-4 z-20">
+              <button onclick="toggleSound(this)" class="flex flex-col items-center group">
+                <div class="w-11 h-11 rounded-full bg-zinc-900/60 backdrop-blur-md border border-white/10 flex items-center justify-center text-white group-hover:scale-110 transition">
+                  <i data-lucide="volume-2" class="w-5 h-5"></i>
+                </div>
+                <span class="text-[10px] text-white font-medium mt-1 drop-shadow">Sonido</span>
+              </button>
+
               <button onclick="toggleLike('${epKey}', this)" class="flex flex-col items-center group">
                 <div class="w-11 h-11 rounded-full bg-zinc-900/60 backdrop-blur-md border border-white/10 flex items-center justify-center ${isLiked ? 'text-brand-500' : 'text-white'} group-hover:scale-110 transition">
                   <i data-lucide="heart" class="w-5 h-5 ${isLiked ? 'fill-brand-500' : ''}"></i>
@@ -1139,6 +1146,20 @@ app.listen(3000, () => console.log('Servidor corriendo en puerto 3000'));
         video.pause();
         if (overlay) overlay.classList.remove('hidden');
       }
+    }
+
+    function toggleSound(btn) {
+      const video = btn.closest('.snap-center-item').querySelector('video');
+      if (!video) return;
+      const icon = btn.querySelector('i');
+      if (video.muted) {
+        video.muted = false;
+        icon.setAttribute('data-lucide', 'volume-2');
+      } else {
+        video.muted = true;
+        icon.setAttribute('data-lucide', 'volume-x');
+      }
+      lucide.createIcons();
     }
 
     // --- PAYWALL & UNLOCK LOGIC ---
