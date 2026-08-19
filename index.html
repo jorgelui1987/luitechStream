@@ -1348,6 +1348,21 @@ app.listen(3000, () => console.log('Servidor corriendo en puerto 3000'));
     }
 
     // --- ADMIN CREATOR STUDIO ---
+    // Convert Google Drive URL to direct download URL
+    function convertDriveUrl(url) {
+      // Format: https://drive.google.com/file/d/FILE_ID/view
+      const match = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+      if (match) {
+        return 'https://drive.google.com/uc?export=download&id=' + match[1];
+      }
+      // Format: https://drive.google.com/open?id=FILE_ID
+      const match2 = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+      if (match2) {
+        return 'https://drive.google.com/uc?export=download&id=' + match2[1];
+      }
+      return url;
+    }
+
     // Upload episode video file
     async function uploadEpisodeVideo(btn) {
       const field = btn.closest('.episode-field');
@@ -1460,11 +1475,14 @@ app.listen(3000, () => console.log('Servidor corriendo en puerto 3000'));
 
       let hasEmptyUrl = false;
       episodeFields.forEach((field, index) => {
-        const url = field.querySelector('.ep-url').value.trim();
-        if (!url) {
+        const rawUrl = field.querySelector('.ep-url').value.trim();
+        if (!rawUrl) {
           hasEmptyUrl = true;
           return;
         }
+
+        // Convert Google Drive URL to direct download URL
+        const url = convertDriveUrl(rawUrl);
 
         const isFirst = index === 0;
         const cost = isFirst ? 0 : (parseInt(field.querySelector('.ep-cost')?.value) || 10);
