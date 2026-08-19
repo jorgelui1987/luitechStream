@@ -9,9 +9,11 @@ RUN a2enmod rewrite
 # Copiar archivos de la aplicación
 COPY . /var/www/html/
 
-# Configurar permisos
-RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 755 /var/www/html
+# Configurar permisos y crear directorio de uploads
+RUN mkdir -p /var/www/html/uploads \
+    && chown -R www-data:www-data /var/www/html \
+    && chmod -R 755 /var/www/html \
+    && chmod -R 775 /var/www/html/uploads
 
 # Script de entrada que inicializa la BD y arranca Apache
 COPY docker-entrypoint.sh /usr/local/bin/

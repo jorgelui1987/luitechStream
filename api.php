@@ -252,6 +252,54 @@ if ($action === 'add_coins') {
 }
 
 // ============================================
+// ACCIÓN: Subir archivo de video MP4
+// ============================================
+if ($action === 'upload_video') {
+    if (!isset($_FILES['video']) || $_FILES['video']['error'] !== UPLOAD_ERR_OK) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Error al subir el archivo']);
+        exit();
+    }
+    
+    $file = $_FILES['video'];
+    $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+    
+    // Solo permitir MP4
+    if ($ext !== 'mp4') {
+        http_response_code(400);
+        echo json_encode(['error' => 'Solo se permiten archivos MP4']);
+        exit();
+    }
+    
+    // Crear directorio de uploads si no existe
+    $uploadDir = __DIR__ . '/uploads/';
+    if (!is_dir($uploadDir)) {
+        mkdir($uploadDir, 0755, true);
+    }
+    
+    // Generar nombre único
+    $filename = 'video_' . uniqid() . '.mp4';
+    $targetPath = $uploadDir . $filename;
+    
+    if (move_uploaded_file($file['tmp_name'], $targetPath)) {
+        // Construir URL pública
+        $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+        $host = $_SERVER['HTTP_HOST'];
+        $baseUrl = $protocol . '://' . $host . '/uploads/';
+        
+        echo json_encode([
+            'success' => true,
+            'url' => $baseUrl . $filename,
+            'message' => 'Video subido correctamente'
+        ]);
+    } else {
+        http_response_code(500);
+        echo json_encode(['error' => 'No se pudo guardar el archivo']);
+    }
+    exit();
+}
+
+// ============================================
 // ACCIÓN: Publicar nueva serie
 // ============================================
 if ($action === 'add_series') {
