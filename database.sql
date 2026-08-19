@@ -74,19 +74,19 @@ INSERT INTO series (id, title, category, cover, description) VALUES
 ON DUPLICATE KEY UPDATE title = VALUES(title);
 
 INSERT INTO episodes (series_id, ep_num, title, video_url, is_free, cost, likes) VALUES
-('series-1', 1, 'Capítulo 1: El Chofer Misterioso', 'https://assets.mixkit.co/videos/preview/mixkit-vertical-shot-of-a-waterfall-in-a-forest-42894-large.mp4', TRUE, 0, 1240),
-('series-1', 2, 'Capítulo 2: El Encuentro en la Gala', 'https://assets.mixkit.co/videos/preview/mixkit-tree-branches-in-the-breeze-1187-large.mp4', TRUE, 0, 980),
-('series-1', 3, 'Capítulo 3: Revelación Inesperada', 'https://assets.mixkit.co/videos/preview/mixkit-vertical-shot-of-a-waterfall-in-a-forest-42894-large.mp4', FALSE, 10, 1420),
-('series-1', 4, 'Capítulo 4: El Contrato Falso', 'https://assets.mixkit.co/videos/preview/mixkit-tree-branches-in-the-breeze-1187-large.mp4', FALSE, 10, 890),
-('series-1', 5, 'Capítulo 5: Venganza en el Imperio', 'https://assets.mixkit.co/videos/preview/mixkit-vertical-shot-of-a-waterfall-in-a-forest-42894-large.mp4', FALSE, 10, 2100),
-('series-2', 1, 'Capítulo 1: La Traición', 'https://assets.mixkit.co/videos/preview/mixkit-tree-branches-in-the-breeze-1187-large.mp4', TRUE, 0, 3100),
-('series-2', 2, 'Capítulo 2: El Regreso de la Reina', 'https://assets.mixkit.co/videos/preview/mixkit-vertical-shot-of-a-waterfall-in-a-forest-42894-large.mp4', TRUE, 0, 2750),
-('series-2', 3, 'Capítulo 3: Caída del Imperio Traidor', 'https://assets.mixkit.co/videos/preview/mixkit-tree-branches-in-the-breeze-1187-large.mp4', FALSE, 10, 1980),
-('series-3', 1, 'Capítulo 1: El Café y la Tormenta', 'https://assets.mixkit.co/videos/preview/mixkit-vertical-shot-of-a-waterfall-in-a-forest-42894-large.mp4', TRUE, 0, 4560),
-('series-3', 2, 'Capítulo 2: La Cita Doblada', 'https://assets.mixkit.co/videos/preview/mixkit-tree-branches-in-the-breeze-1187-large.mp4', FALSE, 10, 3100),
-('series-4', 1, 'Capítulo 1: La Dama de la Niebla', 'https://assets.mixkit.co/videos/preview/mixkit-vertical-shot-of-a-waterfall-in-a-forest-42894-large.mp4', TRUE, 0, 5670),
-('series-4', 2, 'Capítulo 2: El Pacto Prohibido', 'https://assets.mixkit.co/videos/preview/mixkit-tree-branches-in-the-breeze-1187-large.mp4', TRUE, 0, 4320),
-('series-4', 3, 'Capítulo 3: El Portal en el Bosque', 'https://assets.mixkit.co/videos/preview/mixkit-vertical-shot-of-a-waterfall-in-a-forest-42894-large.mp4', FALSE, 10, 2210)
+('series-1', 1, 'Capítulo 1: El Chofer Misterioso', 'https://www.w3schools.com/html/mov_bbb.mp4', TRUE, 0, 1240),
+('series-1', 2, 'Capítulo 2: El Encuentro en la Gala', 'https://www.w3schools.com/html/movie.mp4', TRUE, 0, 980),
+('series-1', 3, 'Capítulo 3: Revelación Inesperada', 'https://www.w3schools.com/html/mov_bbb.mp4', FALSE, 10, 1420),
+('series-1', 4, 'Capítulo 4: El Contrato Falso', 'https://www.w3schools.com/html/movie.mp4', FALSE, 10, 890),
+('series-1', 5, 'Capítulo 5: Venganza en el Imperio', 'https://www.w3schools.com/html/mov_bbb.mp4', FALSE, 10, 2100),
+('series-2', 1, 'Capítulo 1: La Traición', 'https://www.w3schools.com/html/movie.mp4', TRUE, 0, 3100),
+('series-2', 2, 'Capítulo 2: El Regreso de la Reina', 'https://www.w3schools.com/html/mov_bbb.mp4', TRUE, 0, 2750),
+('series-2', 3, 'Capítulo 3: Caída del Imperio Traidor', 'https://www.w3schools.com/html/movie.mp4', FALSE, 10, 1980),
+('series-3', 1, 'Capítulo 1: El Café y la Tormenta', 'https://www.w3schools.com/html/mov_bbb.mp4', TRUE, 0, 4560),
+('series-3', 2, 'Capítulo 2: La Cita Doblada', 'https://www.w3schools.com/html/movie.mp4', FALSE, 10, 3100),
+('series-4', 1, 'Capítulo 1: La Dama de la Niebla', 'https://www.w3schools.com/html/movie.mp4', TRUE, 0, 5670),
+('series-4', 2, 'Capítulo 2: El Pacto Prohibido', 'https://www.w3schools.com/html/mov_bbb.mp4', TRUE, 0, 4320),
+('series-4', 3, 'Capítulo 3: El Portal en el Bosque', 'https://www.w3schools.com/html/movie.mp4', FALSE, 10, 2210)
 ON DUPLICATE KEY UPDATE title = VALUES(title);
 
 -- ============================================
